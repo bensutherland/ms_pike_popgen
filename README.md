@@ -49,7 +49,7 @@ bedtools coverage -a windows.bed -b ./Eluc.variants.GATK.iteration.2.b.Full.SNP.
 ```
 
 Use the following script interactively in R to analyze the variants per window and generate plots:      
-`plotting_chr_poly_levels.R`    
+`01_scripts/plotting_chr_poly_levels.R`    
 
 
 ### Fixed differences across the NACD ###
