@@ -52,8 +52,8 @@ Use the following script interactively in R to analyze the variants per window a
 `01_scripts/plotting_chr_poly_levels.R`    
 
 
-### Fixed differences across the NACD ###
-Use script `01_scripts/fixed_diffs_across_NACD.R` to...    
+## 02. Identify fixed differences across and within population clusters ##
+Use the following script interactively in R to analyze fixed genotypic differences across and within the major groupings in the dataset:     
+`01_scripts/fixed_diffs_across_NACD.R` .    
 
-Other scripts included for the analysis include     
 
