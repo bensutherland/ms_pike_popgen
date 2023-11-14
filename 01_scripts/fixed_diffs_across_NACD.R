@@ -6,13 +6,25 @@
 
 # Load packages
 #install.packages("vcfR")
+#install.packages("rstudioapi")
 library("vcfR")
+library("rstudioapi")
 
-# Set working directory
-setwd("~/Documents/00_sbio/UVic_northern_pike/02_fixed_diffs")
+# Set working directory to the ms_scallop_popgen repo
+current.path <- dirname(rstudioapi::getSourceEditorContext()$path)
+current.path <- gsub(pattern = "\\/01_scripts", replacement = "", x = current.path)
+setwd(current.path)
+rm(current.path)
+
+## Info
+# sessionInfo()
+
+#### 01. Set up ####
+# Set filenames
+vcf.FN <- "02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode.vcf"
 
 # Read in data
-vcf <- read.vcfR(file = "../01_polymorph_enrich/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode.vcf")
+vcf <- read.vcfR(file = vcf.FN)
 
 # Extract genotypes
 gt.df <- extract.gt(x = vcf, element = "GT", as.numeric = TRUE) # note: also possible to 'return.alleles' or "0/1" format
@@ -28,15 +40,13 @@ gt_SLA.df <- gt.df[, grep(x = colnames(gt.df), pattern = "-S")]
 gt_CHT.df <- gt.df[, grep(x = colnames(gt.df), pattern = "CR")]
 gt_HOO.df <- gt.df[, grep(x = colnames(gt.df), pattern = "-YR")]
 
-#gt_sel.df <- gt.df[, grep(x = colnames(gt.df), pattern = "NJ|S|CR|YR")]
-
-# What are the samples in each pop?
+# View the samples in each pop
 colnames(gt_HCK.df)
 colnames(gt_SLA.df)
 colnames(gt_CHT.df)
 colnames(gt_HOO.df)
 
-# How many in each pop?
+# Tally samples per pop
 ncol(gt_HCK.df) #  9
 ncol(gt_SLA.df) # 11
 ncol(gt_CHT.df) # 10
@@ -49,10 +59,18 @@ genos.list[["SLA"]] <- gt_SLA.df
 genos.list[["CHT"]] <- gt_CHT.df
 genos.list[["HOO"]] <- gt_HOO.df
 
-# Run a loop
-# Set the number of records
-#num.records <- 100000
+# Clean up
+rm(gt_HCK.df)
+rm(gt_SLA.df)
+rm(gt_CHT.df)
+rm(gt_HOO.df)
+rm(gt.df)
+rm(vcf)
+gc()
 
+
+#### 02. Analyze ####
+# Characterize features per pop in loop
 genos.df <- NULL; pop.target <- NULL; result.list <- list()
 for(i in 1:length(genos.list)){
   
@@ -61,34 +79,38 @@ for(i in 1:length(genos.list)){
   
   print(paste0("Working on population: ", pop.target))
   
-  # Extract the geno for target pop
+  # Extract the geno for the target pop
   genos.df <- genos.list[[pop.target]]
   
-  # Make a matrix to collect information
+  # Prepare blank matrix to collect information
   result.df <- matrix(data = NA, nrow = nrow(genos.df), ncol = 5)
   colnames(result.df) <- c("locus.name", "num.homo.ref", "num.het", "num.homo.alt", "num.missing")
   result.df <- as.data.frame(result.df)
   head(result.df)
   
-  # Debugging
-  #result.df <- result.df[1:num.records, ]
+  # Characterize by row
+  ### OLD METHOD ###
+  # for(l in 1:nrow(result.df)){
+  #   
+  #   result.df[l, "locus.name"]   <- rownames(genos.df)[l]
+  #   result.df[l, "num.homo.ref"] <- sum(genos.df[l, ]=="0", na.rm = T)
+  #   result.df[l, "num.het"]      <- sum(genos.df[l, ]=="1", na.rm = T)
+  #   result.df[l, "num.homo.alt"] <- sum(genos.df[l, ]=="2", na.rm = T)
+  #   result.df[l, "num.missing"]  <- sum(is.na(genos.df[l,]))
+  #   
+  # }
+  ### /END/ OLD METHOD ###
   
-  # Calculate number of each per line
-  for(l in 1:nrow(result.df)){
-    
-    result.df[l, "locus.name"]   <- rownames(genos.df)[l]
-    result.df[l, "num.homo.ref"] <- sum(genos.df[l, ]=="0", na.rm = T)
-    result.df[l, "num.het"]      <- sum(genos.df[l, ]=="1", na.rm = T)
-    result.df[l, "num.homo.alt"] <- sum(genos.df[l, ]=="2", na.rm = T)
-    result.df[l, "num.missing"]  <- sum(is.na(genos.df[l,]))
-    
-  }
+  result.df$locus.name   <- rownames(genos.df) # locus name
+  result.df$num.homo.ref <- rowSums(genos.df=="0", na.rm = T) # homo ref
+  result.df$num.het      <- rowSums(genos.df=="1", na.rm = T) # het
+  result.df$num.homo.alt <- rowSums(genos.df=="2", na.rm = T) # homo alt
+  result.df$num.missing  <- rowSums(is.na(genos.df))          # NA
   
-  head(result.df, n = 20)
+  #head(result.df, n = 20)
+  #dim(result.df)
   
-  dim(result.df)
-  
-  # Check for NA
+  # Data checking
   if(sum(is.na(c(result.df$num.homo.ref, result.df$num.het, result.df$num.homo.alt)))==0){
     
     print("All looks good, continue")
@@ -99,15 +121,13 @@ for(i in 1:length(genos.list)){
     
   }
   
-  # Inspect results
-  dim(result.df)
-  head(result.df, n = 20)
-  
   # Any homozygous alternate? 
-  result.df[which(result.df$num.homo.alt!=0), ] # yes, but not many
+  #result.df[which(result.df$num.homo.alt!=0), ]
   
   # Do you have any hets? 
-  head(result.df[which(result.df$num.het!=0), ], n = 20)  # yes, many
+  #result.df[which(result.df$num.het!=0), ]
+  
+  ##### WORKING HERE ####
   
   # Remove heterozygous, as they are not fixed
   result.df <- result.df[result.df$num.het==0, ]
