@@ -121,26 +121,28 @@ for(i in 1:length(genos.list)){
     
   }
   
+  print(paste0("This population has ", nrow(result.df), " variants before any are removed."))
+  
   # Any homozygous alternate? 
   #result.df[which(result.df$num.homo.alt!=0), ]
   
   # Do you have any hets? 
   #result.df[which(result.df$num.het!=0), ]
   
-  ##### WORKING HERE ####
-  
-  # Remove heterozygous, as they are not fixed
+  # Only retain variants with exactly zero heterozygous genotypes, as looking for fixed diffs
+  print("Removing any variants that have heterozygous genotypes in this population.")
   result.df <- result.df[result.df$num.het==0, ]
-  dim(result.df)
+  print(paste0("After removing hets, there are ", nrow(result.df), " variants remaining."))
   
   # Discard any loci that have both homozygous ref and alt
+  print("Keeping variants that have homozygous ref genotypes and no homozygous alts, or visa-versa, within this target population")
   result.df <- result.df[result.df$num.homo.ref!=0 & result.df$num.homo.alt==0 | result.df$num.homo.ref==0 & result.df$num.homo.alt!=0, ]
-  dim(result.df)
+  print(paste0("After removing unfixed variants, there are ", nrow(result.df), " variants remaining."))
   
-  table(result.df$num.homo.ref)
-  sum(table(result.df$num.homo.ref)) # May not always work
-  table(result.df$num.homo.alt)
-  table(result.df$num.homo.alt)
+  # table(result.df$num.homo.ref)
+  # sum(table(result.df$num.homo.ref)) # May not always work
+  # table(result.df$num.homo.alt)
+  # table(result.df$num.homo.alt)
   
   # result.list <- list()
   # result.list[["HCK"]] <- result.df
@@ -165,52 +167,64 @@ print("Remember, this is considering fixed differences only")
 
 
 # Inspect results manually
-head(CHT.df)
-dim(CHT.df)                # 85,267 records
-table(CHT.df$num.homo.ref)
-table(CHT.df$num.homo.alt) # 2 alt homozyg
-
-head(HOO.df)
-dim(HOO.df)                # 86,640 records
-table(HOO.df$num.homo.ref)
-table(HOO.df$num.homo.alt) # 2 alt homozyg
-
 head(HCK.df)
-dim(HCK.df)                # 96,864 records
+dim(HCK.df)                # 1,074,768 records
 table(HCK.df$num.homo.ref)
-table(HCK.df$num.homo.alt) # 0 alt homozyg
+table(HCK.df$num.homo.alt) #         4 fixed alt homozyg
 
 head(SLA.df)
-dim(SLA.df)                # 98,154 records
+dim(SLA.df)                # 1,089,447 records
 table(SLA.df$num.homo.ref)
-table(SLA.df$num.homo.alt) # 0 alt homozyg
+table(SLA.df$num.homo.alt) #         6 fixed alt homozyg
+
+head(CHT.df)
+dim(CHT.df)                #   887,207 records
+table(CHT.df$num.homo.ref) 
+table(CHT.df$num.homo.alt) #        12 alt homozyg
+
+head(HOO.df)
+dim(HOO.df)                #   958,025 records
+table(HOO.df$num.homo.ref)
+table(HOO.df$num.homo.alt) #        14 alt homozyg
 
 
 #### Contrasts, fixed diffs ####
 # Set the variables for pop 1 or pop 2, then produce a report below
-pop1 <- "CHT"
-pop2 <- "SLA"
+# ## main contrast
+# pop1 <- "CHT"
+# pop2 <- "SLA"
+
+# ## within west
+# pop1 <- "CHT"
+# pop2 <- "HOO"
+
+## within east
+pop1 <- "SLA"
+pop2 <- "HCK"
+
 
 # How many variants are fixed for the ref or alt allele in pop 1?
-sum(result.list[[pop1]]$num.homo.ref > 0) # 85,265
-sum(result.list[[pop1]]$num.homo.alt > 0) #      2
+sum(result.list[[pop1]]$num.homo.ref > 0)
+sum(result.list[[pop1]]$num.homo.alt > 0)
 
 # How many variants are fixed for the ref allele in pop 2?
-sum(result.list[[pop2]]$num.homo.ref > 0) # 98,154
-sum(result.list[[pop2]]$num.homo.alt > 0) #      0
+sum(result.list[[pop2]]$num.homo.ref > 0)
+sum(result.list[[pop2]]$num.homo.alt > 0)
 
-# and what are they? 
+# and what are they (pop 1)? 
 fixed_ref_loci_pop1.vec <- result.list[[pop1]][result.list[[pop1]]$num.homo.ref > 0 , "locus.name"]
 fixed_alt_loci_pop1.vec <- result.list[[pop1]][result.list[[pop1]]$num.homo.alt > 0 , "locus.name"]
 
-# and what are they? 
+# and what are they (pop 2)? 
 fixed_ref_loci_pop2.vec <- result.list[[pop1]][result.list[[pop2]]$num.homo.ref > 0 , "locus.name"]
 fixed_alt_loci_pop2.vec <- result.list[[pop1]][result.list[[pop2]]$num.homo.alt > 0 , "locus.name"]
 
 # How many of the fixed alt in pop 1 are fixed ref in pop 2? 
-length(intersect(x = fixed_alt_loci_pop1.vec, y = fixed_ref_loci_pop2.vec)) # 2
+length(intersect(x = fixed_alt_loci_pop1.vec, y = fixed_ref_loci_pop2.vec))
 
 # How many of the fixed alt in pop 2 are fixed ref in pop 1? 
-length(intersect(x = fixed_alt_loci_pop2.vec, y = fixed_ref_loci_pop1.vec)) # 0
+length(intersect(x = fixed_alt_loci_pop2.vec, y = fixed_ref_loci_pop1.vec))
 
 # With these items, it should provide all of the information you need for the study
+
+
