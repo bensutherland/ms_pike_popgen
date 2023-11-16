@@ -77,21 +77,64 @@ summary_all.df[1:15,]
 
 colnames(summary_all.df)
 colnames(summary_all.df) <- c("indiv", "geno", "count")
+head(summary_all.df)
+
+# Restrict to only the target genos for plotting
+summary_all.df <- summary_all.df[which(summary_all.df$geno=="0/1" | 
+                                         summary_all.df$geno=="1/1"), ]
+
+# Rename samples
+summary_all.df$indiv
+
+summary_all.df$indiv <- gsub(pattern = "Eluc", replacement = "", x = summary_all.df$indiv) # drop Eluc
+summary_all.df$indiv <- gsub(pattern = "Elub", replacement = "", x = summary_all.df$indiv) # typo in data
+summary_all.df$indiv
+summary_all.df$indiv <- gsub(pattern = "-YR", replacement = "HOO_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-Mb", replacement = "WHI_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-CR", replacement = "CHT_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern =  "-S", replacement = "SLA_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-PL", replacement = "PAL_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-NJ", replacement = "HCK_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-CL", replacement = "CHA_1", x = summary_all.df$indiv) # note: added 1 for matching
+summary_all.df$indiv <- gsub(pattern = "-CaG", replacement = "CAS_1", x = summary_all.df$indiv) # note: added 1 for matching
+#summary_all.df$indiv <- gsub(pattern = "-", replacement = "_", x = summary_all.df$indiv)
+summary_all.df$indiv <- gsub(pattern = "-.*", replacement = "", x = summary_all.df$indiv)
+
+summary_all.df$indiv
+
+# Reorder
+summary_all.df$order <- NA
+summary_all.df$order[grep(pattern = "CHT", x = summary_all.df$indiv)] <- 1
+summary_all.df$order[grep(pattern = "HOO", x = summary_all.df$indiv)] <- 2
+summary_all.df$order[grep(pattern = "PAL", x = summary_all.df$indiv)] <- 3
+summary_all.df$order[grep(pattern = "CHA", x = summary_all.df$indiv)] <- 4
+summary_all.df$order[grep(pattern = "CAS", x = summary_all.df$indiv)] <- 5
+summary_all.df$order[grep(pattern = "WHI", x = summary_all.df$indiv)] <- 6
+summary_all.df$order[grep(pattern = "SLA", x = summary_all.df$indiv)] <- 7
+summary_all.df$order[grep(pattern = "HCK", x = summary_all.df$indiv)] <- 8
+
+# Can't figure out how to use backreference to 
+# grep(pattern = '_[0-9]$', x = summary_all.df$indiv, perl = T, invert = T)
+# #gsub(pattern = '_', replacement = "_0", x = summary_all.df$indiv[grep(pattern = '_[0-9]$', x = summary_all.df$indiv, perl = T)])
+# gsub(pattern = '_[0-9]$', x = summary_all.df$indiv, replacement = "_0", fixed = F)
 
 # Need to reorder by pop
-# TODO: use gsub and grep on a vector of sample names to provide order (do further up)
-# TODO: replace namings with the new pop namings
-# TODO: specify colours
-# TODO: try a version with only 0/1 and 1/1 values
-# TODO: remove gray grid
 # TODO: update axis labels
 
 #summary_all.df.bck <- summary_all.df
 # summary_all.df <- summary_all.df[which(summary_all.df$geno=="0/0" | summary_all.df$geno=="0/1" | 
 #                                 summary_all.df$geno=="1/1"), ]
 
-summary_all.df <- summary_all.df[which(summary_all.df$geno=="0/1" | 
-                                         summary_all.df$geno=="1/1"), ]
+# Add leading zero
+install.packages("tidyr")
+library("tidyr")
+summary_all.df <- separate(data = summary_all.df, col = "indiv", into = c("pop", "num"), sep = "_", remove = T)
+summary_all.df$num <- as.numeric(summary_all.df$num)
+summary_all.df$num <- sprintf(fmt = '%02d', summary_all.df$num)
+summary_all.df$indiv <- paste0(summary_all.df$pop, "_", summary_all.df$num)
+head(summary_all.df)
+summary_all.df <- summary_all.df[,c("indiv", "geno", "count", "order")]
+
 
 
 # Plot
@@ -100,9 +143,23 @@ options(scipen = 99999999)
 #install.packages("ggplot2")
 library("ggplot2")
 
-p <- ggplot(data = summary_all.df, aes(fill=geno, y = count, x = indiv)) + 
+# Reorder attempt
+p <- ggplot(data = summary_all.df, aes(fill=geno, x = reorder(indiv, order), y = count)) +
        geom_bar(position='stack', stat = 'identity') +
-       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
+       theme_bw() +
+       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+             #, panel.border = element_blank()
+             , panel.grid.major = element_blank()
+             , panel.grid.minor = element_blank()
+             #,
+             ) +
+       scale_fill_grey(start = 0.3, end = 0.7) + # grey colour
+       xlab("Individual") + 
+       ylab("Number variants") 
 p
+
+# Save plot
+pdf(file = "03_results/num_var_per_indiv.pdf", width = 9, height = 3.5)
+print(p)
+dev.off()
 
