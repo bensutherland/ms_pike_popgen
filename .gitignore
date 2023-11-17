@@ -3,4 +3,6 @@
 *.vcf
 *.pdf
 .DS_Store 
+*.Rdata
+.Rhistory
 
