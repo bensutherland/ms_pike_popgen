@@ -1,16 +1,29 @@
 # Plot the sampling locations of the northern pike sampling
+# B. Sutherland (2023-10-18)
 
-#### 00. Front Matter ####
-## Clean space
-# rm(list=ls())
+# Clear space
+#rm(list=ls())
 
-## Install and load libraries
+# Load packages
+#install.packages("vcfR")
+#install.packages("rstudioapi")
 # install.packages("ggrepel")
 # install.packages("maps")
 # install.packages("mapdata")
-library(ggrepel)
-library(maps)
-library(mapdata)
+library("ggrepel")
+library("maps")
+library("mapdata")
+library("vcfR")
+library("rstudioapi")
+
+# Set working directory to the ms_scallop_popgen repo
+current.path <- dirname(rstudioapi::getSourceEditorContext()$path)
+current.path <- gsub(pattern = "\\/01_scripts", replacement = "", x = current.path)
+setwd(current.path)
+rm(current.path)
+
+## Info
+# sessionInfo()
 
 
 #### 01. Provide locations ####
@@ -74,7 +87,7 @@ map_plot <- ggplot() + map_trimmed
 map_plot
 
 ## Add the NACD
-nacd.df <- read.csv(file = "Documents/00_sbio/UVic_northern_pike/sbio_revision/NACD_GPS_coordinates_2023-10-18.csv")
+nacd.df <- read.csv(file = "00_archive/NACD_GPS_coordinates_2023-10-18.csv")
 head(nacd.df)
 tail(nacd.df)
 
@@ -143,7 +156,8 @@ map_plot <- map_plot +
 map_plot
 
 # Save out
-pdf(file = "~/Documents/00_sbio/UVic_northern_pike/sbio_revision/northern_pike_map_figure.pdf", width = 9, height = 5
+pdf(file = "03_results/northern_pike_map_figure.pdf", width = 9, height = 5
 )
 map_plot
 dev.off()
+
