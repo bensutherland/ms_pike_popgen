@@ -27,7 +27,8 @@ vcf.FN <- "02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_remov
 vcf <- read.vcfR(file = vcf.FN)
 
 # Extract genotypes
-gt.df <- extract.gt(x = vcf, element = "GT", as.numeric = TRUE) # note: also possible to 'return.alleles' or "0/1" format
+gt.df <- extract.gt(x = vcf, element = "GT"
+              ) # note: do not use the 'as.numeric' method because there are more than two alleles in the VCF and this causes issues
 gt.df[1:5,1:5]
 
 # View all the sample names
@@ -68,6 +69,8 @@ rm(gt.df)
 rm(vcf)
 gc()
 
+# note: will assume that the second most frequent allele observed is coded by 1 in 0/1 and 1/1
+table(genos.df[,1], useNA = "ifany") # to observe possible per locus genos and their counts for one sample as example
 
 #### 02. Analyze ####
 # Characterize features per pop in loop
@@ -88,23 +91,11 @@ for(i in 1:length(genos.list)){
   result.df <- as.data.frame(result.df)
   head(result.df)
   
-  # Characterize by row
-  ### OLD METHOD ###
-  # for(l in 1:nrow(result.df)){
-  #   
-  #   result.df[l, "locus.name"]   <- rownames(genos.df)[l]
-  #   result.df[l, "num.homo.ref"] <- sum(genos.df[l, ]=="0", na.rm = T)
-  #   result.df[l, "num.het"]      <- sum(genos.df[l, ]=="1", na.rm = T)
-  #   result.df[l, "num.homo.alt"] <- sum(genos.df[l, ]=="2", na.rm = T)
-  #   result.df[l, "num.missing"]  <- sum(is.na(genos.df[l,]))
-  #   
-  # }
-  ### /END/ OLD METHOD ###
-  
+  # Collect information and put into matrix
   result.df$locus.name   <- rownames(genos.df) # locus name
-  result.df$num.homo.ref <- rowSums(genos.df=="0", na.rm = T) # homo ref
-  result.df$num.het      <- rowSums(genos.df=="1", na.rm = T) # het
-  result.df$num.homo.alt <- rowSums(genos.df=="2", na.rm = T) # homo alt
+  result.df$num.homo.ref <- rowSums(genos.df=="0/0", na.rm = T) # homo ref
+  result.df$num.het      <- rowSums(genos.df=="0/1", na.rm = T) # het
+  result.df$num.homo.alt <- rowSums(genos.df=="1/1", na.rm = T) # homo alt
   result.df$num.missing  <- rowSums(is.na(genos.df))          # NA
   
   #head(result.df, n = 20)
@@ -190,24 +181,26 @@ table(HOO.df$num.homo.alt) #        14 alt homozyg
 
 #### Contrasts, fixed diffs ####
 # Set the variables for pop 1 or pop 2, then produce a report below
-# ## main contrast
-# pop1 <- "CHT"
-# pop2 <- "SLA"
+## main contrast
+pop1 <- "CHT"
+pop2 <- "SLA"
 
 # ## within west
 # pop1 <- "CHT"
 # pop2 <- "HOO"
 
-## within east
-pop1 <- "SLA"
-pop2 <- "HCK"
+# ## within east
+# pop1 <- "SLA"
+# pop2 <- "HCK"
 
 
 # How many variants are fixed for the ref or alt allele in pop 1?
+print(pop1)
 sum(result.list[[pop1]]$num.homo.ref > 0)
 sum(result.list[[pop1]]$num.homo.alt > 0)
 
 # How many variants are fixed for the ref allele in pop 2?
+print(pop2)
 sum(result.list[[pop2]]$num.homo.ref > 0)
 sum(result.list[[pop2]]$num.homo.alt > 0)
 
