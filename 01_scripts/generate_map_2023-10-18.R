@@ -161,3 +161,7 @@ pdf(file = "03_results/northern_pike_map_figure.pdf", width = 9, height = 5
 map_plot
 dev.off()
 
+# Save mapping plot as object
+# save(map_plot, file = "03_results/sample_map.Rdata")
+# save(nacd.df, file = "03_results/NACD_df.Rdata")
+save.image(file = "03_results/mapping_data.Rdata")

@@ -164,3 +164,8 @@ pdf(file = "03_results/num_var_per_indiv.pdf", width = 9, height = 3.5)
 print(p)
 dev.off()
 
+variants_per_indiv.plot <- p
+
+# Save per sample genotype count plot as object
+save(variants_per_indiv.plot, file = "03_results/per_ind_genos.Rdata")
+
