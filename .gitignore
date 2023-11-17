@@ -1,4 +1,6 @@
 *~
 *.fna
 *.vcf
- 
+*.pdf
+.DS_Store 
+
