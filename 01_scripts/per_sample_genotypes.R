@@ -135,7 +135,8 @@ summary_all.df$indiv <- paste0(summary_all.df$pop, "_", summary_all.df$num)
 head(summary_all.df)
 summary_all.df <- summary_all.df[,c("indiv", "geno", "count", "order")]
 
-
+# # Rename genos (would implement here)
+# summary_all.df$geno <- gsub(pattern = "0/1", replacement = "Het.", x = summary_all.df$geno)
 
 # Plot
 options(scipen = 99999999)
