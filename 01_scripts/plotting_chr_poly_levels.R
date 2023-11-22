@@ -21,7 +21,7 @@ rm(current.path)
 options(scipen = 9999999)
 coverage.FN <- "02_input_data/coverage.txt"
 
-# Read in data
+#### 00. Read in data ####
 coverage.df <- read.delim(file = coverage.FN, header = F)
 head(coverage.df, n = 10)
 colnames(coverage.df) <- c("LG", "start", "stop", "poly.sum")
@@ -35,18 +35,8 @@ coverage.df <- coverage.df[with(coverage.df, order(coverage.df$LG, coverage.df$s
 unique(coverage.df$LG)
 head(coverage.df)
 
-# Generate a plotting variable
-#coverage.df$plotting.poly.sum <- coverage.df$poly.sum / 1000 
 
-# # Basic barplot of poly sum per chr
-# p<-ggplot(data=coverage.df, aes(x=LG, y=poly.sum)) +
-#   geom_bar(stat="identity")
-# p
-# 
-# head(coverage.df)
-
-
-#### Polymorphism by chr length ####
+#### 01. Polymorphism by chr length ####
 # Determine the length of each chr
 len.chr = NULL; len.chr.list <- list()
 for(i in 1:length(unique(coverage.df$LG))){
@@ -58,8 +48,6 @@ for(i in 1:length(unique(coverage.df$LG))){
 
 }
 
-
-len.chr.list
 len.chr.df <- as.data.frame(unlist(len.chr.list))
 len.chr.df$chr <- rownames(len.chr.df)
 colnames(len.chr.df) <- c("len", "chr")
@@ -67,19 +55,16 @@ len.chr.df <- len.chr.df[,c("chr", "len")]
 head(len.chr.df)
 tail(len.chr.df)
 
-
-# Calculate the total number variants per chr
-coverage.df$LG
+# Calculate number of variants per chr
 poly_by_chr.df <- aggregate(coverage.df$poly.sum, by=list(LG=coverage.df$LG), FUN=sum)
 str(poly_by_chr.df)
 head(poly_by_chr.df)
+# test
+sum(coverage.df[coverage.df$LG=="LG01", "poly.sum"]) # to confirm matches above
 
-# Confirm ok? 
-sum(coverage.df[coverage.df$LG=="LG01", "poly.sum"]) # OK!
-
-# Combine the variant counts to the chromosomes
-head(len.chr.df)
+# Combine variant counts with chr
 head(poly_by_chr.df)
+head(len.chr.df)
 chr_length_and_cumul_poly.df <- merge(x = len.chr.df, y = poly_by_chr.df, by.x = "chr", by.y = "LG")
 head(chr_length_and_cumul_poly.df)
 colnames(chr_length_and_cumul_poly.df) <- c("chr", "length", "poly.sum")
@@ -87,61 +72,55 @@ head(chr_length_and_cumul_poly.df)
 
 # Convert bp to kbp
 chr_length_and_cumul_poly.df$length_per.kb <- chr_length_and_cumul_poly.df$length / 1000
+head(chr_length_and_cumul_poly.df) # This will be used below for plotting
 
 
-# Plot mean number of variants per kbp per chr
-pdf(file = "03_results/plot_mean_variant_count_per_window_per_chr.pdf", width = 15, height = 4)
-plot(chr_length_and_cumul_poly.df$poly.sum / chr_length_and_cumul_poly.df$length_per.kb
-     , xaxt = "n"
-     , ylab = "avg. SNP / kb"
-     , las = 1
-     , xlab = "chr"
-     )
-axis(side = 1, at = seq(1:nrow(chr_length_and_cumul_poly.df)))
-dev.off()
-
-
-
-#### Approach to calculate number of bins ####
+#### 02. Plot windows (binned variants) across chr ####
+# How many bins of variants per chr? 
 bins <- table(coverage.df$LG)
 bins.df <- as.data.frame(names(bins))
 colnames(bins.df) <- "chr"
 bins.df$bins <- as.numeric(bins)
-bins.df$cumsum <- cumsum(bins.df$bins)
+bins.df$cumsum <- cumsum(bins.df$bins) # cumulate total number of bins
 
 head(bins.df)
 
+# Determine bin numbers where chr start, stop, or midway for labels
 bins.df$start.bin <- NA; bins.df$end.bin <- NA; bins.df$label.pos <- NA
 for(i in 1:nrow(bins.df)){
   
   if(i == 1){
     
+    # The starting chr starts at zero
     bins.df$start.bin[i] <- 0
     
   }else{
     
+    # Any subsequent chr starts at the end of the previous cumulative bin count
     bins.df$start.bin[i] <- bins.df$cumsum[i-1]
     
   }
   
+  # End of bins is at the end of the cumulative sum per chr
   bins.df$end.bin[i] <- bins.df$cumsum[i]
   
+  # Labels go in the middle of each start and stop per chr
   bins.df$label.pos[i] <- ((bins.df$end.bin[i] - bins.df$start.bin[i])/2) + bins.df$start.bin[i]
 
 }
 
 head(bins.df)
 
-# Create colour vector for plotting
+# Create alternating colour vector for plotting
 bins.df$plot.colour <- "black"
 bins.df$plot.colour[c(FALSE, TRUE)] <- "darkgrey"
-bins.df
+head(bins.df)
 
-
+# Inspect df to be used
 head(coverage.df)
 head(bins.df)
 
-# TODO: add colours
+# Bring colour from the bins df into the coverage df
 coverage.df$plot.color <- NA
 for(i in 1:length(coverage.df$plot.color)){
   
@@ -152,8 +131,8 @@ for(i in 1:length(coverage.df$plot.color)){
 head(coverage.df, n = 10)
 
 
-#### Outlier Approach ####
-# How many values are present in the dataset? 
+#### 03. Identify bins that have outlier variant counts ####
+# How many bins were generated? 
 length(coverage.df$poly.sum) #930
 
 # Summary statistics of the polymorphism level per window
@@ -170,48 +149,81 @@ boxplot.stats(coverage.df$poly.sum)$out[boxplot.stats(coverage.df$poly.sum)$out 
 outlier_polymorphism.vec <- boxplot.stats(coverage.df$poly.sum)$out
 
 min(outlier_polymorphism.vec) # everything over 2341 polymorphism is an outlier
-boxplot(coverage.df$poly.sum)
-abline(h = min(outlier_polymorphism.vec))
+outlier_cutoff.val <- min(outlier_polymorphism.vec) # everything over 2341 polymorphism is an outlier
 
-coverage.df[which(coverage.df$poly.sum > min(outlier_polymorphism.vec)), ]
+boxplot(coverage.df$poly.sum, las = 1)
+abline(h = outlier_cutoff.val, lty = 2)
+
+# What bins are above the outlier level? 
+head(coverage.df[which(coverage.df$poly.sum > min(outlier_polymorphism.vec)), ])
 outlier_segments.df <- coverage.df[which(coverage.df$poly.sum > min(outlier_polymorphism.vec)), ]
+
+# How many from each chr? 
 table(coverage.df[which(coverage.df$poly.sum > min(outlier_polymorphism.vec)), "LG"])
+
+# Export results as text files
 write.table(x = outlier_segments.df, file = "03_results/elevated_variant_windows.txt", quote = F
             , sep = "\t", row.names = F, col.names = T
-            )
+            ) # outliers only
 
 write.table(x = coverage.df, file = "03_results/all_variant_windows.txt", quote = F
             , sep = "\t", row.names = F, col.names = T
-)
+            ) # all data
 
-# Inspect this manually to see regions of consecutive elevated polymorphism above the outlier level
+# Note: inspect this manually to see regions of consecutive elevated polymorphism above the outlier level
+head(coverage.df)
 
-outlier_cutoff.val <- min(outlier_polymorphism.vec) # everything over 2341 polymorphism is an outlier
+coverage.df <- coverage.df[with(coverage.df, order(coverage.df$LG, coverage.df$start)), ]
+head(coverage.df)
+tail(coverage.df)
+coverage.df$plot.order <- seq(1:nrow(coverage.df))
 
-# TODO: make sure the data is ordered, as the seq command below requires it
-# if planning to do this, we may want to make a dataframe with a consecutive counting value for plotting
-# that would make colouring outliers easier
-
-# Plot variant sum per bin across the chrs
-pdf(file = "03_results/plot_SNP_sum_per_window.pdf", width = 15, height = 4)
-plot(x = seq(1:nrow(coverage.df)), y = coverage.df$poly.sum
+#### 04. Plotting ####
+pdf(file = "03_results/variants_per_chr.pdf", width = 11, height = 6)
+par(mfrow=c(2,1), mar = c(4.5,4.1,3, 2.1))
+# Plot variant sum per bin across the chr
+#pdf(file = "03_results/plot_SNP_sum_per_window.pdf", width = 15, height = 4)
+plot(x = coverage.df$plot.order, y = coverage.df$poly.sum
      , xaxt = "n"
      , xlab = "Chromosome"
-     , ylab = "Per window SNP sum"
+     , ylab = "variants per window"
      , las = 1
      , pch = 16
      , col = coverage.df$plot.color
-     , cex = 1
+     , cex = 0.8
      )
 abline(v = bins.df$end.bin, lty = 2)
 abline(v = bins.df$start.bin, lty = 2)
-axis(side = 1, at = bins.df$label.pos, labels = bins.df$chr
-     , tick = T, las = 2
+axis(side = 1, at = bins.df$label.pos, labels = gsub(pattern = "LG", replacement = "", x = bins.df$chr)
+     , tick = T
+     , las = 2
      )
 
 abline(h = outlier_cutoff.val, lty = 3)
 
+#dev.off()
+
+
+# Plot mean number of variants per kbp per chr
+#pdf(file = "03_results/plot_mean_variant_count_per_window_per_chr.pdf", width = 15, height = 4)
+plot(chr_length_and_cumul_poly.df$poly.sum / chr_length_and_cumul_poly.df$length_per.kb
+     , xaxt = "n"
+     , ylab = "avg. variant per kb"
+     , las = 1
+     , xlab = "Chromosome"
+     , pch = 16
+     , ylim = c(0,3)
+)
+axis(side = 1, at = seq(1:nrow(chr_length_and_cumul_poly.df))
+     , labels = gsub(pattern = "LG", replacement = "", x = chr_length_and_cumul_poly.df$chr)
+     , las = 2)
+
+#dev.off()
 dev.off()
+
+
+
+
 
 
 
