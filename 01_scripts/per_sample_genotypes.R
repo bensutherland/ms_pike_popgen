@@ -169,3 +169,23 @@ variants_per_indiv.plot <- p
 # Save per sample genotype count plot as object
 save(variants_per_indiv.plot, file = "03_results/per_ind_genos.Rdata")
 
+# Calculate per population summary stats
+head(summary_all.df)
+
+sumstats.df  <- separate(data = summary_all.df, col = "indiv", into = c("pop", "indiv")
+                       , sep = "_", remove = F)
+
+head(sumstats.df)
+head(sumstats.df)
+
+mean(sumstats.df[sumstats.df$geno=="0/1" & sumstats.df$pop=="HOO", "count"])
+aggregate(count ~ pop, data = sumstats.df[sumstats.df$geno=="0/1",], FUN = mean)
+aggregate(count ~ pop, data = sumstats.df[sumstats.df$geno=="1/1",], FUN = mean)
+
+
+
+
+
+
+
+
