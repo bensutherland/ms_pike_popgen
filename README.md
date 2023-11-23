@@ -10,6 +10,7 @@ Johnson, HA, Rondeau, EB, Minkley, DR, Leong, JS, Whitehead, J, Despins, CA, et 
 #### Requirements ####
 - samtools     
 - bedtools     
+- bcftools
 - Eric Normandeau's scripts repository
 
 ## 00. Data preparation
@@ -62,6 +63,18 @@ Use the following script interactively in R to analyze fixed genotypic differenc
 ## 03. Per sample genotypes
 Produce a stacked barplot of genotypes per sample, including REF/REF, REF/ALT, ALT/ALT, missing using the following script:      
 `01_scripts/per_sample_genotypes.R`      
+
+
+## 04. Per population statistics
+Variant sites with more than two alleles are causing issues, so first, remove these:     
+`bcftools view --max-alleles 2 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode.vcf > 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf`        
+This file should now have 1,117,361 variants remaining.     
+
+Use the RScript `01_scripts/per_pop_stats.R` interactively to calculate per population average HOBS and FIS, and the number of private alleles per population.      
+
+
+
+
 
 
 
