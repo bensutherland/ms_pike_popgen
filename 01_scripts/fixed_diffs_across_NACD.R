@@ -70,7 +70,7 @@ rm(vcf)
 gc()
 
 # note: will assume that the second most frequent allele observed is coded by 1 in 0/1 and 1/1
-table(genos.df[,1], useNA = "ifany") # to observe possible per locus genos and their counts for one sample as example
+#table(genos.df[,1], useNA = "ifany") # to observe possible per locus genos and their counts for one sample as example
 
 #### 02. Analyze ####
 # Characterize features per pop in loop
@@ -157,26 +157,67 @@ print("Now only have fixed alleles per pop")
 print("Remember, this is considering fixed differences only")
 
 
-# Inspect results manually
-head(HCK.df)
-dim(HCK.df)                # 1,074,768 records
-table(HCK.df$num.homo.ref)
-table(HCK.df$num.homo.alt) #         4 fixed alt homozyg
+# Collect the names of fixed alternates
+head(result.list[["CHT"]])
 
-head(SLA.df)
-dim(SLA.df)                # 1,089,447 records
-table(SLA.df$num.homo.ref)
-table(SLA.df$num.homo.alt) #         6 fixed alt homozyg
+soi <- NULL; poi <- NULL; result.df <- NULL; result_all.df <- NULL
+for(i in 1:length(result.list)){
+  
+  poi <- names(result.list)[i]
+  soi <- result.list[[i]]
+  
+  homo_alt_fixed.vec <- soi[soi$num.homo.alt > 0, "locus.name"]
+  
+  result.df <- cbind(poi, homo_alt_fixed.vec)
+  result.df <- as.data.frame(result.df)
+  colnames(result.df) <- c("pop", "locus_name")
+  
+  result_all.df <- rbind(result.df, result_all.df)
+  
+}
 
-head(CHT.df)
-dim(CHT.df)                #   887,207 records
-table(CHT.df$num.homo.ref) 
-table(CHT.df$num.homo.alt) #        12 alt homozyg
+# Here are the fixed alleles
+table(result_all.df$pop)
 
-head(HOO.df)
-dim(HOO.df)                #   958,025 records
-table(HOO.df$num.homo.ref)
-table(HOO.df$num.homo.alt) #        14 alt homozyg
+# Write out
+write.table(x = result_all.df, file = "03_results/fixed_homo_alt_with_pop.txt", quote = F, sep = "\t"
+            , row.names = F)
+
+
+## Now go to new script to compare
+
+
+#### OLD ####
+
+# and what are they (pop 1)? 
+fixed_ref_loci_pop1.vec <- result.list[[pop1]][result.list[[pop1]]$num.homo.ref > 0 , "locus.name"]
+fixed_alt_loci_pop1.vec <- result.list[[pop1]][result.list[[pop1]]$num.homo.alt > 0 , "locus.name"]
+
+
+
+
+
+
+# # Inspect results manually
+# head(HCK.df)
+# dim(HCK.df)                # 1,074,768 records
+# table(HCK.df$num.homo.ref)
+# table(HCK.df$num.homo.alt) 
+# 
+# head(SLA.df)
+# dim(SLA.df)                # 1,089,447 records
+# table(SLA.df$num.homo.ref)
+# table(SLA.df$num.homo.alt) 
+# 
+# head(CHT.df)
+# dim(CHT.df)                #   887,207 records
+# table(CHT.df$num.homo.ref) 
+# table(CHT.df$num.homo.alt) #        12 alt homozyg
+# 
+# head(HOO.df)
+# dim(HOO.df)                #   958,025 records
+# table(HOO.df$num.homo.ref)
+# table(HOO.df$num.homo.alt) #        14 alt homozyg
 
 
 #### Contrasts, fixed diffs ####
