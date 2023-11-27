@@ -11,6 +11,7 @@ Johnson, HA, Rondeau, EB, Minkley, DR, Leong, JS, Whitehead, J, Despins, CA, et 
 - samtools     
 - bedtools     
 - bcftools
+- vcftools
 - Eric Normandeau's scripts repository
 
 ## 00. Data preparation
@@ -73,9 +74,55 @@ This file should now have 1,117,361 variants remaining.
 Use the RScript `01_scripts/per_pop_stats.R` interactively to calculate per population average HOBS and FIS, and the number of private alleles per population.      
 
 
+### Tajima's D ###
+Using the VCF above with only biallelic variants, determine the names of the samples in the VCF:     
+`bcftools query --list-samples 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf > 02_input_data/samples.txt`     
 
+Create per population sample names files:     
+```
+grep '\-CR' 02_input_data/samples.txt > 02_input_data/samples_CHT.txt
+grep '\-YR' 02_input_data/samples.txt > 02_input_data/samples_HOO.txt
+grep '\-PL' 02_input_data/samples.txt > 02_input_data/samples_PAL.txt
+grep '\-Mb' 02_input_data/samples.txt > 02_input_data/samples_WHI.txt
+grep '\-S' 02_input_data/samples.txt > 02_input_data/samples_SLA.txt
+grep '\-NJ' 02_input_data/samples.txt > 02_input_data/samples_HCK.txt
+```
 
+Create population-specific VCFs:     
+```
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_CHT.txt --recode --recode-INFO-all --out 02_input_data/Eluc_CHT.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_HOO.txt --recode --recode-INFO-all --out 02_input_data/Eluc_HOO.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_PAL.txt --recode --recode-INFO-all --out 02_input_data/Eluc_PAL.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_WHI.txt --recode --recode-INFO-all --out 02_input_data/Eluc_WHI.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_SLA.txt --recode --recode-INFO-all --out 02_input_data/Eluc_SLA.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_HCK.txt --recode --recode-INFO-all --out 02_input_data/Eluc_HCK.vcf
+vcftools --vcf 02_input_data/Eluc.variants.GATK.iteration.2.b.Full.SNP.GATK_HF_removed.minQ20.mmdp10.mxmdp60.mmc10.mac1.homsumfilt.new.samp.names.recode_biallelic_only.vcf --keep 02_input_data/samples_greater_NA.txt --recode --recode-INFO-all --out 02_input_data/Eluc_GNA.vcf
 
+```
 
+Run Tajima's D calculation on the population-specific VCF:     
+```
+vcftools --vcf 02_input_data/Eluc_CHT.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_CHT
+vcftools --vcf 02_input_data/Eluc_HOO.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_HOO
+vcftools --vcf 02_input_data/Eluc_PAL.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_PAL
+vcftools --vcf 02_input_data/Eluc_WHI.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_WHI
+vcftools --vcf 02_input_data/Eluc_SLA.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_SLA
+vcftools --vcf 02_input_data/Eluc_HCK.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_HCK
+vcftools --vcf 02_input_data/Eluc_GNA.vcf.recode.vcf --TajimaD 10000 --out 03_results/Eluc_GNA
 
+```
+note: output will be, for example, `Eluc_CHT.Tajima.D`.    
+
+Run Tajima's D calculation on the population-specific VCF:     
+```
+vcftools --vcf 02_input_data/Eluc_CHT.vcf.recode.vcf --site-pi --out 03_results/Eluc_CHT
+vcftools --vcf 02_input_data/Eluc_HOO.vcf.recode.vcf --site-pi --out 03_results/Eluc_HOO
+vcftools --vcf 02_input_data/Eluc_PAL.vcf.recode.vcf --site-pi --out 03_results/Eluc_PAL
+vcftools --vcf 02_input_data/Eluc_WHI.vcf.recode.vcf --site-pi --out 03_results/Eluc_WHI
+vcftools --vcf 02_input_data/Eluc_SLA.vcf.recode.vcf --site-pi --out 03_results/Eluc_SLA
+vcftools --vcf 02_input_data/Eluc_HCK.vcf.recode.vcf --site-pi --out 03_results/Eluc_HCK
+vcftools --vcf 02_input_data/Eluc_GNA.vcf.recode.vcf --site-pi --out 03_results/Eluc_GNA
+
+```
+Use Rscript `X.R` to find means for each of the Tajima's D files.    
 
