@@ -8,6 +8,8 @@
 #install.packages("vcfR")
 #install.packages("rstudioapi")
 #install.packages("dplyr")
+#install.packages("tidyr")
+library("tidyr")
 library("vcfR")
 library("rstudioapi")
 library("dplyr")
@@ -126,8 +128,6 @@ summary_all.df$order[grep(pattern = "HCK", x = summary_all.df$indiv)] <- 8
 #                                 summary_all.df$geno=="1/1"), ]
 
 # Add leading zero
-install.packages("tidyr")
-library("tidyr")
 summary_all.df <- separate(data = summary_all.df, col = "indiv", into = c("pop", "num"), sep = "_", remove = T)
 summary_all.df$num <- as.numeric(summary_all.df$num)
 summary_all.df$num <- sprintf(fmt = '%02d', summary_all.df$num)
@@ -176,16 +176,27 @@ sumstats.df  <- separate(data = summary_all.df, col = "indiv", into = c("pop", "
                        , sep = "_", remove = F)
 
 head(sumstats.df)
+sumstats.df$indname <- paste0(sumstats.df$pop, "_", sumstats.df$indiv)
 head(sumstats.df)
 
+# Separate the genos into two df then recombine
+het.df  <- sumstats.df[sumstats.df$geno=="0/1", ]
+homo.df <- sumstats.df[sumstats.df$geno=="1/1", ]
+head(het.df)
+head(homo.df)
+
+wide.df <- merge(x = het.df, y = homo.df, by = "indname", all = T)
+head(wide.df)
+wide.df <- wide.df[,c("pop.x", "indname", "geno.x", "count.x", "geno.y", "count.y")]
+head(wide.df)
+colnames(wide.df) <- c("pop", "ind", "geno.het", "count.het", "geno.homo.alt", "count.homo.alt")
+head(wide.df)
+write.table(x = wide.df, file = "03_results/number_genos_per_indiv.txt", quote = F, sep = "\t", row.names = F)
+
+
+# Calculate the average number of each genotype per individual within each population
 mean(sumstats.df[sumstats.df$geno=="0/1" & sumstats.df$pop=="HOO", "count"])
 aggregate(count ~ pop, data = sumstats.df[sumstats.df$geno=="0/1",], FUN = mean)
 aggregate(count ~ pop, data = sumstats.df[sumstats.df$geno=="1/1",], FUN = mean)
 
-
-
-
-
-
-
-
+# Complete
