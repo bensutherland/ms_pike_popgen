@@ -45,7 +45,7 @@ gt.df  <- extract.gt(x = my_data.vcf, element = "GT")
 gt.df[1:5,1:5]
 head(rownames(gt.df))
 
-# # multiallelic gone? 
+# # Optional - check to confirm that multiallelic variants are gone: 
 # for(i in 1:ncol(gt.df)){
 #   
 #   print(i)
@@ -59,11 +59,11 @@ my_data.gid <- vcfR2genind(x = my_data.vcf)
 my_data.gid
 head(locNames(my_data.gid))
 
-# Check loci name comparison bw geno df and genind
+# Compare locus names bw geno df and genind
 length(intersect(x =  locNames(my_data.gid), y = (rownames(gt.df))))
 nLoc(my_data.gid)
 
-# Assign population attribute of genind
+# Assign population attribute of genind based on individual names
 inds <- indNames(my_data.gid)
 inds[grep(pattern = "-CL-", x = inds)] <- "CHA"
 inds[grep(pattern = "-CaG-", x = inds)] <- "CAS"
@@ -96,20 +96,27 @@ write.table(x = df, file = "03_results/HOBS_summary_stats.txt", quote = F
 
 
 #### 03. Private alleles ####
-pa <- private_alleles(gid = my_data.gid)
-pa.t <- t(pa) # Summary table of pa per pop (obs number of pa to each pop)
-head(pa.t)
+# Calculate private alleles per population
+pa <- private_alleles(gid = my_data.gid) # calc'd by pop by default
+dim(pa) 
+pa[1:4,1:10]    # rows: population; cols: private alleles
+
+# Transpose pa output
+pa.t <- t(pa)   # Summary table of pa per pop (obs number of pa to each pop)
 dim(pa.t)
-# note that the number will give one per allele, e.g., a single het in the pop will be val of 1, two hets = 2, two homo alt = 4
+pa.t[1:10,]     # rows: private alleles; cols = pop
+# note: the output is a unit per allele, e.g., a single het in the pop will be val of 1, two hets = 2, two homo alt = 4
 
-# To confirm the above
-gt.df["LG07_3041", ]
+# To confirm the above, inspect the first row of private allele output in the genotype df (note: drop allelic designation)
+gt.df["LG07_3041", ] # there are two hets in CHT
+gt.df["LG07_5166", ] # there are two hets in HCK
 
-
-# Remove allele ID
+# Remove allele ID from the pa locus name
 rownames(x = pa.t) <- gsub(pattern = "\\.[0-9]", x = rownames(x = pa.t), replacement = "", perl = T)
 head(pa.t)
-table(duplicated(rownames(pa.t))) # any duplicates after removing allele? (there shouldn't be)
+
+# Data check: any duplicates after removing allele? (there shouldn't be)
+table(duplicated(rownames(pa.t))) # all false, OK
 
 # Identify how many private alleles per pop
 for(i in 1:ncol(pa.t)){
@@ -124,6 +131,14 @@ for(i in 1:ncol(pa.t)){
 
 # If want to limit to pops with at least 5 indiv
 table(pop(my_data.gid))
+
+# What are the tallies of pa per pop for those with at least five indiv? 
+head(pa.t)
+table(pa.t[,"SLA"])
+table(pa.t[,"CHT"])
+table(pa.t[,"HCK"])
+table(pa.t[,"WHI"])
+table(pa.t[,"HOO"])
 
 # Make df of all pa markers, and the name of their pop
 head(pa.t)
