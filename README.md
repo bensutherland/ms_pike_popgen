@@ -2,10 +2,9 @@
 A repository to accompany the analysis of the northern pike popgen study.     
 
 Citation:     
-```
+
 Johnson, HA, Rondeau, EB, Minkley, DR, Leong, JS, Whitehead, J, Despins, CA, et al. (2020). Population genomics of North American northern pike: variation and sex-specific signals from a chromosome-level, long read genome assembly. bioRxiv, 2020.2006.2018.157701. doi:10.1101/2020.06.18.157701
 
-```
 
 #### Requirements ####
 - samtools     
@@ -17,7 +16,7 @@ Johnson, HA, Rondeau, EB, Minkley, DR, Leong, JS, Whitehead, J, Despins, CA, et 
 ## 00. Data preparation
 Download the following and put in `02_input_data`:       
 - _Esox lucius_ reference genome [GCA_004634155.1_Eluc_v4_genomic.fna](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_004634155.1://www.ncbi.nlm.nih.gov/datasets/genome/GCF_004634155.1/)       
-- project VCF file from [figshare](#TODO)     
+- project VCF file from [figshare](https://doi.org/10.6084/m9.figshare.25230146 )     
  
 
 ## 01. Characterize overall variant counts across chromosomes
