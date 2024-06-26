@@ -28,6 +28,7 @@ rm(current.path)
 
 #### 01. Provide locations ####
 # Manually enter GPS coordinates of each sampling location (long, lat)
+MIN <- c(-149.56240, 65.10451)
 CHT <- c(-148.86032, 64.98396)
 HOO <- c(-135.13209, 61.51156)
 PAL <- c(-133.57592, 59.43708)
@@ -39,8 +40,8 @@ HCK <- c( -74.83359, 40.84155)
 
 
 # Make into df
-loc_global.df <- rbind(CHT, HOO, PAL, CHA, CAS, WHI, SLA, HCK)
-rm(CHT, HOO, PAL, CHA, CAS, WHI, SLA, HCK)
+loc_global.df <- rbind(MIN, CHT, HOO, PAL, CHA, CAS, WHI, SLA, HCK)
+rm(MIN, CHT, HOO, PAL, CHA, CAS, WHI, SLA, HCK)
 loc_global.df <- as.data.frame(x = loc_global.df, stringsAsFactors = F)
 colnames(loc_global.df) <- c("lon", "lat")
 loc_global.df
@@ -119,11 +120,11 @@ map_plot
 map_plot <- map_plot + 
   geom_label_repel(
     
-    # # Add parameters
-    # direction = "x"
+    # Add parameters
+    #direction = "y",
     # , vjust = 1
-    # , hjust = 1
-    
+    # , hjust = 1,
+     
     # Add aesthetics
     aes(x = loc_global.df$lon
           , y = loc_global.df$lat
@@ -156,7 +157,7 @@ map_plot <- map_plot +
 map_plot
 
 # Save out
-pdf(file = "03_results/northern_pike_map_figure.pdf", width = 9, height = 5
+pdf(file = "03_results/northern_pike_map_figure_with_MIN.pdf", width = 9, height = 5
 )
 map_plot
 dev.off()
@@ -164,4 +165,5 @@ dev.off()
 # Save mapping plot as object
 # save(map_plot, file = "03_results/sample_map.Rdata")
 # save(nacd.df, file = "03_results/NACD_df.Rdata")
-save.image(file = "03_results/mapping_data.Rdata")
+save.image(file = "03_results/mapping_data_with_MIN.Rdata")
+

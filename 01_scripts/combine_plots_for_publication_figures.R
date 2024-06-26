@@ -7,8 +7,19 @@
 # Load packages
 #install.packages("rstudioapi")
 #install.packages("ggpubr")
+#install.packages("ggside")
+# utils::install.packages("ggside")
+# utils::install.packages("ggstatsplot")
+#install.packages("ggstatsplot")
 library("rstudioapi")
 require("ggpubr")
+library("tidyr")
+library("vcfR")
+library("rstudioapi")
+library("dplyr")
+library("ggplot2")
+library("ggside")
+library("ggstatsplot")
 
 # Set working directory to the ms_scallop_popgen repo
 current.path <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -21,7 +32,7 @@ rm(current.path)
 
 # load(file = "03_results/sample_map.Rdata")
 # load(file = "03_results/NACD_df.Rdata")
-load(file = "03_results/mapping_data.Rdata")
+load(file = "03_results/mapping_data_with_MIN.Rdata")
 
 load(file = "03_results/per_ind_genos.Rdata")
 
